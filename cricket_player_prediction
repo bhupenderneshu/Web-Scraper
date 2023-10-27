@@ -1,0 +1,219 @@
+<h1 align='left side' style='color:purple'>Cricket Player Performance Prediction Using Machine Learning</h1>
+By Md Ashraf
+# Importing libraries
+import numpy as np
+import pandas as pd
+import seaborn as sea
+import matplotlib.pyplot as plt
+br = pd.read_csv("Player_dataset.csv")
+br['Opposition'] = br['Opposition'].str.replace('v ','')
+br
+# Data cleaning
+br.isnull().sum()
+br.dropna(inplace=True)
+br.isnull().sum()
+# Exploratory Data Analysis
+br
+br.describe()
+# Teams which played most matches
+plt.figure(figsize=(15,15))
+sea.countplot(x='Country',data=br)
+plt.show()
+# Result count
+sea.countplot(x='Result', data=br)
+new=br.loc[(br['Result']=='lost')& (br['Player']=='Andre Russell')]
+new
+c=br['Country'].unique()
+c
+v=br.loc[br['Runs'] > 150 ]
+arrnp = v['Player'].values
+runs = v['Runs'].tolist()
+runs
+players = v['Player'].tolist()
+print(players)
+print(runs)
+# Highest run scorer
+sea.barplot(y=players, x=runs, data=v)
+plt.show()
+
+According to the above plot, Martin Guptill is the highest run scorer, followed by Rohit Sharma
+
+c=br['Country'].unique()
+countries =c.tolist()
+c
+# Teams which won most matches
+won = br.loc[br['Result']=='won']
+wi= br.loc[(br['Result']=='won') & (br['Country']=='WestIndies') ]
+sri = br.loc[(br['Result']=='won') & (br['Country']=='SriLanka') ]
+south = br.loc[(br['Result']=='won') & (br['Country']=='SouthAfrica') ]
+pak = br.loc[(br['Result']=='won') & (br['Country']=='Pakistan') ]
+newz = br.loc[(br['Result']=='won') & (br['Country']=='NewZealand') ]
+ind = br.loc[(br['Result']=='won') & (br['Country']=='India') ]
+eng =  br.loc[(br['Result']=='won') & (br['Country']=='England') ]
+bang= br.loc[(br['Result']=='won') & (br['Country']=='Bangladesh') ]
+aust = br.loc[(br['Result']=='won') & (br['Country']=='Australia') ]
+afgh= br.loc[(br['Result']=='won') & (br['Country']=='Australia') ]
+woncount=[wi['Result'].count(),sri['Result'].count(),south['Result'].count(),pak['Result'].count(),\
+           newz['Result'].count(),ind['Result'].count(),eng['Result'].count(),bang['Result'].count(),aust['Result'].count(),afgh['Result'].count(),]
+sea.barplot(y=countries, x=woncount, data=won)
+plt.show()
+# which which lost most matches
+lost = br.loc[br['Result']=='lost']
+wi= br.loc[(br['Result']=='lost') & (br['Country']=='WestIndies') ]
+sri = br.loc[(br['Result']=='lost') & (br['Country']=='SriLanka') ]
+south = br.loc[(br['Result']=='lost') & (br['Country']=='SouthAfrica') ]
+pak = br.loc[(br['Result']=='lost') & (br['Country']=='Pakistan') ]
+newz = br.loc[(br['Result']=='lost') & (br['Country']=='NewZealand') ]
+ind = br.loc[(br['Result']=='lost') & (br['Country']=='India') ]
+eng =  br.loc[(br['Result']=='lost') & (br['Country']=='England') ]
+bang= br.loc[(br['Result']=='lost') & (br['Country']=='Bangladesh') ]
+aust = br.loc[(br['Result']=='lost') & (br['Country']=='Australia') ]
+afgh= br.loc[(br['Result']=='lost') & (br['Country']=='Australia') ]
+lostcount=[wi['Result'].count(),sri['Result'].count(),south['Result'].count(),pak['Result'].count(),\
+           newz['Result'].count(),ind['Result'].count(),eng['Result'].count(),bang['Result'].count(),aust['Result'].count(),afgh['Result'].count(),]
+sea.barplot(y=countries, x=lostcount, data=lost)
+plt.show()
+According to the above 3 plots England has played most matches, therefore they have won and lost in the same range.Other than England, India and Bangladesh has most wins and New Zealand and India has most loses
+
+valuebr = br
+br
+cd =br[['Runs','Target']]
+cd.head()
+# Features distribution
+sea.displot(br['BF'])
+sea.displot(br['Target'])
+sea.displot(br['SR'])
+sea.displot(y=br['Country'],kde=True)
+plt.show()
+### Removing first  5 overs
+print("before removal",br.shape)
+br = br[br['Overs'] >=5.0]
+print("before removal",br.shape)
+### Dropping irrelevant columns
+print("before dropping",br.shape)
+newbr=br.drop(columns=['ID','Country','Bat1','Ground','Start Date','Match_ID'])
+print("after dropping",newbr.shape)
+newbr['Team Runs'] = newbr['Team Runs'].str.replace('/','.')
+newbr['Team Runs'] = pd.to_numeric(newbr['Team Runs'])
+newdup=newbr.copy()
+newbr[newbr['Player']=='Virat Kohli ']
+newbr
+# Heatmap
+newbr['Team Runs'] = newbr['Team Runs'].astype(float)
+newbr['Inns'] = newbr['Inns'].astype(float)
+newbr['RPO'] = newbr['RPO'].astype(float)
+newbr.dtypes
+heatbr = newbr[['Runs','BF','SR','4s','6s','Overs','Target','Team Runs','RPO']]
+heatbr
+heatbr.dtypes
+heatbr.corr()
+from seaborn import heatmap
+heatmap(data=heatbr.corr(),annot=True)
+plt.show()
+
+In the above heatmap we get a clear picture of features and its correlations.
+and here Runs and BF are closely correlated. 
+Which means there will be more impact on Runs by the balls faced than other features
+Here is a regression  plot of BF and Runs
+# Regplot
+sea.regplot(x=heatbr['BF'],y=heatbr['Runs'],data=heatbr)
+plt.show()
+# Encoding using dummies
+t3newbr=newbr.copy()
+t3newbr
+import re
+dummies = pd.get_dummies(t3newbr[['Player','Opposition']],prefix='').astype(int)
+dummies.rename(columns=lambda x: re.sub(r'_v', '', x), inplace=True)
+dummies.rename(columns=lambda y: re.sub(r'_', '', y), inplace=True)
+dummies.astype(float)
+
+mergfile = pd.concat([dummies,t3newbr],axis='columns')
+mergfile.describe()
+final = mergfile.drop(['Player','Opposition','Result','Inns','4s','6s','Player_ID','SR','RPO','Team Runs','Target'],axis='columns')
+final
+final
+demo = final[['Virat Kohli ','Pakistan','Runs','BF','Overs']]
+demo.head(4)
+# Training and Testing Model
+
+Dividing into X and Y variables
+from sklearn.model_selection import train_test_split
+X= demo.drop(['Runs'],axis=1)
+Y = demo['Runs']
+train_X, test_X, train_Y,test_Y = train_test_split(X, Y, test_size=0.20, shuffle=True)
+comp=dict()
+# Prediction
+
+Using various types of regressors to get the best accuracy
+# Decision Tree Regressor
+from sklearn.tree import DecisionTreeRegressor
+tree = DecisionTreeRegressor()
+#Train Model
+tree.fit(test_X,test_Y)
+tree.score(test_X,test_Y)
+tree=tree.score(test_X,test_Y)
+comp['tree']=tree
+# K Neighbors Regressor
+from sklearn.neighbors import KNeighborsRegressor
+knr = KNeighborsRegressor()
+knr.fit(test_X,test_Y)
+knr.score(test_X,test_Y)
+knr=knr.score(test_X,test_Y)
+comp['knr']=knr
+# XGBRegressor
+from xgboost import XGBRegressor
+xgb = XGBRegressor()
+xgb.fit(test_X,test_Y)
+xgb.score(test_X,test_Y)
+xgb=xgb.score(test_X,test_Y)
+comp['xgb']=xgb
+# RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor
+fors = RandomForestRegressor()
+fors.fit(test_X,test_Y)
+fors.score(test_X,test_Y)
+fors=fors.score(test_X,test_Y)
+comp['fors']=fors
+# Linear Regression
+from sklearn.linear_model import LinearRegression
+li=LinearRegression()
+li.fit(test_X,test_Y)
+li.score(test_X,test_Y)
+li=li.score(test_X,test_Y)
+comp['li']=li
+# SVR
+from sklearn.svm import SVR
+sv = SVR()
+sv.fit(test_X,test_Y)
+sv.score(test_X,test_Y)
+sv=sv.score(test_X,test_Y)
+comp['sv']=sv
+plt.show()
+# Comparison between Regressors
+keys = list(comp.keys())
+val = list(comp.values())
+plt.bar(keys,val)
+
+After comparison between the  regressors , we can see that Decision Tree Regressor is having the highest accuracy,
+and which is best for our model. Therefore we choose Decision Tree Regressor 
+# Selecting Decision Tree Regressor
+from sklearn.tree import DecisionTreeRegressor
+tree = DecisionTreeRegressor()
+# Train Model
+tree.fit(test_X,test_Y)
+tree.score(test_X,test_Y)
+# Predicting Runs of a Specific Player
+
+It can accept player name and opposition and along with it can can accept how many balls a player might face in a certain
+over
+
+player = input('enter the name')
+opposition = input('enter opposition team')
+demo = final[[player,opposition,'Runs','BF','Overs']]
+bf=float(input('enter balls faced'))
+ov=float(input('enter the overs'))
+tree.fit(test_X,test_Y)
+preds=tree.predict([[1,1,bf,ov]])
+print(player+"'s overall run predicted is",preds,"Against",opposition)
+# Accuracy
+tree.score(test_X,test_Y)
